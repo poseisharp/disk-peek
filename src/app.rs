@@ -1,4 +1,3 @@
-use egui::Widget;
 use egui_plot::{Line, PlotPoints};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -47,10 +46,10 @@ impl TemplateApp {
 
         Default::default()
     }
-pub fn ordered_by_closeness(input: &Vec<u32>, base: u32) -> Vec<u32> {
-    let mut cloned_input = input.clone();
-    cloned_input.sort_by_key(|&x| (x as i32 - base as i32).abs());
-    cloned_input
+fn ordered_by_closeness(input: &Vec<u32>, base: u32) -> Vec<u32> {
+    let mut result = input.clone();
+    result.sort_by_key(|&x| (x as i32 - base as i32).abs());
+    result
 }
 }
 
@@ -148,7 +147,7 @@ impl eframe::App for TemplateApp {
                         .y_axis_width(2)
                         .data_aspect(1.0)
                         .show(ui, |plot_ui| {
-                            let new_seq = TemplateApp::ordered_by_closeness(&mut self.sequence, self.arm_position_int);
+                            let new_seq = TemplateApp::ordered_by_closeness(&self.sequence, self.arm_position_int);
                             for (i, el) in  new_seq.iter().enumerate(){
                                 if i == 0 {
                                     plot_ui.line(Line::new(PlotPoints::new(vec![
