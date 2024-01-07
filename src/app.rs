@@ -9,6 +9,13 @@ pub struct TemplateApp {
     sequence: Vec<u32>,
     sequence_count: u32,
     open_panel: Panel,
+    direction: Direction,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Debug)]
+enum Direction {
+    Right,
+    Left,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, PartialEq)]
@@ -27,6 +34,7 @@ impl Default for TemplateApp {
             sequence: vec![0],
             sequence_count: 0,
             open_panel: Panel::SSTF,
+            direction: Direction::Left,
         }
     }
 }
@@ -46,11 +54,22 @@ impl TemplateApp {
 
         Default::default()
     }
-fn ordered_by_closeness(input: &Vec<u32>, base: u32) -> Vec<u32> {
-    let mut result = input.clone();
-    result.sort_by_key(|&x| (x as i32 - base as i32).abs());
-    result
-}
+
+    pub fn ordered_by_closeness(input: &Vec<u32>, base: u32) -> Vec<u32> {
+        let mut result = input.clone();
+        result.sort_by_key(|&x| (x as i32 - base as i32).abs());
+        result
+    }
+
+    pub fn arrow_direction(prev: f64, cur: f64) -> egui_plot::MarkerShape {
+        if cur == prev {
+            egui_plot::MarkerShape::Down
+        } else if cur - prev <= 0.0 {
+            egui_plot::MarkerShape::Left
+        } else {
+            egui_plot::MarkerShape::Right
+        }
+    }
 }
 
 impl eframe::App for TemplateApp {
@@ -100,6 +119,17 @@ impl eframe::App for TemplateApp {
                         &mut self.arm_position_int,
                         0..=self.cylinder_count,
                     ));
+
+                    ui.end_row();
+
+                    egui::ComboBox::from_label("Scan Direction")
+                        .selected_text(format!("{dir:?}", dir = self.direction))
+                        .show_ui(ui, |ui| {
+                            ui.style_mut().wrap = Some(false);
+                            ui.set_min_width(60.0);
+                            ui.selectable_value(&mut self.direction, Direction::Left, "Left");
+                            ui.selectable_value(&mut self.direction, Direction::Right, "Right");
+                        });
                 });
 
             ui.separator();
@@ -146,20 +176,49 @@ impl eframe::App for TemplateApp {
                     egui_plot::Plot::new("SSTF")
                         .y_axis_width(2)
                         .data_aspect(1.0)
+                        .legend(egui_plot::Legend::default())
                         .show(ui, |plot_ui| {
-                            let new_seq = TemplateApp::ordered_by_closeness(&self.sequence, self.arm_position_int);
-                            for (i, el) in  new_seq.iter().enumerate(){
+                            let new_seq = TemplateApp::ordered_by_closeness(
+                                &self.sequence,
+                                self.arm_position_int,
+                            );
+                            for (i, el) in new_seq.iter().enumerate() {
                                 if i == 0 {
                                     plot_ui.line(Line::new(PlotPoints::new(vec![
                                         [self.arm_position_int as f64, 0.0],
                                         [new_seq[i].to_owned() as f64, -5.0],
                                     ])));
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            -5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            self.arm_position_int as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
                                 } else {
                                     let prev_y = -5.0 * i as f64;
                                     plot_ui.line(Line::new(PlotPoints::new(vec![
                                         [new_seq[i - 1].to_owned() as f64, -5.0 * i as f64],
                                         [el.to_owned() as f64, prev_y - 5.0],
                                     ])));
+
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            prev_y - 5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            new_seq[i - 1] as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
                                 }
                             }
                         });
