@@ -11,6 +11,7 @@ fn main() -> eframe::Result<()> {
             .with_min_inner_size([300.0, 220.0]),
         ..Default::default()
     };
+
     eframe::run_native(
         "Disk Peek",
         native_options,

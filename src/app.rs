@@ -12,8 +12,8 @@ pub struct TemplateApp {
     direction: Direction,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, PartialEq, Debug)]
-enum Direction {
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Debug, Clone, Copy)]
+pub enum Direction {
     Right,
     Left,
 }
@@ -69,6 +69,197 @@ impl TemplateApp {
         } else {
             egui_plot::MarkerShape::Right
         }
+    }
+
+    pub fn clook(vec: &Vec<u32>, head_value: u32, direction: Direction) -> Vec<u32> {
+        let mut sorted_vec = vec.clone();
+        sorted_vec.sort(); // Sort the vector
+        let mut output: Vec<u32> = Vec::new();
+
+        match direction {
+            Direction::Left => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+                right.reverse();
+
+                left.sort();
+                left.reverse();
+
+                output.append(&mut left);
+                output.append(&mut right);
+            }
+
+            Direction::Right => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+                left.sort();
+
+                output.append(&mut right);
+                output.append(&mut left);
+            }
+        }
+        output
+    }
+
+    pub fn scan(
+        vec: &Vec<u32>,
+        head_value: u32,
+        direction: Direction,
+        cylinder_count: u32,
+    ) -> Vec<u32> {
+        let mut sorted_vec = vec.clone();
+        sorted_vec.sort(); // Sort the vector
+        let mut output: Vec<u32> = Vec::new();
+
+        match direction {
+            Direction::Left => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+
+                left.sort();
+                left.reverse();
+
+                output.append(&mut left);
+                if !sorted_vec.contains(&0) {
+                    output.push(0);
+                }
+                output.append(&mut right);
+            }
+
+            Direction::Right => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+
+                left.sort();
+                left.reverse();
+
+                output.append(&mut right);
+                if !sorted_vec.contains(&cylinder_count) {
+                    output.push(cylinder_count);
+                }
+                output.append(&mut left);
+            }
+        }
+        output
+    }
+
+    pub fn cscan(
+        vec: &Vec<u32>,
+        head_value: u32,
+        direction: Direction,
+        cylinder_count: u32,
+    ) -> Vec<u32> {
+        let mut sorted_vec = vec.clone();
+        sorted_vec.sort(); // Sort the vector
+        let mut output: Vec<u32> = Vec::new();
+
+        match direction {
+            Direction::Left => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+                right.reverse();
+
+                left.sort();
+                left.reverse();
+
+                output.append(&mut left);
+                if !sorted_vec.contains(&0) {
+                    output.push(0);
+                }
+                if !sorted_vec.contains(&cylinder_count) {
+                    output.push(cylinder_count);
+                }
+                output.append(&mut right);
+            }
+
+            Direction::Right => {
+                let mut right: Vec<u32> = Vec::new();
+                let mut left: Vec<u32> = Vec::new();
+
+                for &val in sorted_vec.iter() {
+                    if output.is_empty() {
+                        if val < head_value {
+                            left.push(val);
+                        } else {
+                            right.push(val);
+                        }
+                    }
+                }
+
+                right.sort();
+                left.sort();
+
+                output.append(&mut right);
+                if !sorted_vec.contains(&cylinder_count) {
+                    output.push(cylinder_count);
+                }
+                if !sorted_vec.contains(&0) {
+                    output.push(0);
+                }
+                output.append(&mut left);
+            }
+        }
+        output
     }
 }
 
@@ -224,19 +415,258 @@ impl eframe::App for TemplateApp {
                         });
                 }
                 Panel::SCAN => {
-                    ui.label("Scan");
+                    egui_plot::Plot::new("SCAN")
+                        .y_axis_width(2)
+                        .data_aspect(1.0)
+                        .legend(egui_plot::Legend::default())
+                        .show(ui, |plot_ui| {
+                            let new_seq = TemplateApp::scan(
+                                &self.sequence,
+                                self.arm_position_int,
+                                self.direction,
+                                self.cylinder_count,
+                            );
+
+                            for (i, el) in new_seq.iter().enumerate() {
+                                if i == 0 {
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [self.arm_position_int as f64, 0.0],
+                                        [new_seq[i].to_owned() as f64, -5.0],
+                                    ])));
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            -5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            self.arm_position_int as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                } else {
+                                    let prev_y = -5.0 * i as f64;
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [new_seq[i - 1].to_owned() as f64, -5.0 * i as f64],
+                                        [el.to_owned() as f64, prev_y - 5.0],
+                                    ])));
+
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            prev_y - 5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            new_seq[i - 1] as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                }
+                            }
+                        });
                 }
                 Panel::CSCAN => {
-                    ui.label("C-Scan");
+                    egui_plot::Plot::new("CSCAN")
+                        .y_axis_width(2)
+                        .data_aspect(1.0)
+                        .legend(egui_plot::Legend::default())
+                        .clamp_grid(false)
+                        .show(ui, |plot_ui| {
+                            let new_seq = TemplateApp::cscan(
+                                &self.sequence,
+                                self.arm_position_int,
+                                self.direction,
+                                self.cylinder_count,
+                            );
+
+                            for (i, el) in new_seq.iter().enumerate() {
+                                if i == 0 {
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [self.arm_position_int as f64, 0.0],
+                                        [new_seq[i].to_owned() as f64, -5.0],
+                                    ])));
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            -5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            self.arm_position_int as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                } else {
+                                    let prev_y = -5.0 * i as f64;
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [new_seq[i - 1].to_owned() as f64, -5.0 * i as f64],
+                                        [el.to_owned() as f64, prev_y - 5.0],
+                                    ])));
+
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            prev_y - 5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            new_seq[i - 1] as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                }
+                            }
+                        });
                 }
                 Panel::CLOOK => {
-                    ui.label("C-Look");
+                    egui_plot::Plot::new("CLOOK")
+                        .y_axis_width(2)
+                        .data_aspect(1.0)
+                        .legend(egui_plot::Legend::default())
+                        .clamp_grid(false)
+                        .show(ui, |plot_ui| {
+                            let new_seq = TemplateApp::clook(
+                                &self.sequence,
+                                self.arm_position_int,
+                                self.direction,
+                            );
+
+                            for (i, el) in new_seq.iter().enumerate() {
+                                if i == 0 {
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [self.arm_position_int as f64, 0.0],
+                                        [new_seq[i].to_owned() as f64, -5.0],
+                                    ])));
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            -5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            self.arm_position_int as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                } else {
+                                    let prev_y = -5.0 * i as f64;
+                                    plot_ui.line(Line::new(PlotPoints::new(vec![
+                                        [new_seq[i - 1].to_owned() as f64, -5.0 * i as f64],
+                                        [el.to_owned() as f64, prev_y - 5.0],
+                                    ])));
+
+                                    plot_ui.points(
+                                        egui_plot::Points::new(vec![[
+                                            new_seq[i].to_owned() as f64,
+                                            prev_y - 5.0,
+                                        ]])
+                                        .shape(TemplateApp::arrow_direction(
+                                            new_seq[i - 1] as f64,
+                                            el.to_owned() as f64,
+                                        ))
+                                        .color(egui::Color32::BLUE)
+                                        .radius(8.0),
+                                    );
+                                }
+                            }
+                        });
                 }
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 powered_by_egui_and_eframe(ui);
                 egui::warn_if_debug_build(ui);
+            });
+        });
+
+        egui::TopBottomPanel::bottom("buttom_panel").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.heading("Seek Time");
+                match self.open_panel {
+                    Panel::SSTF => {
+                        let mut total_seq: i32 = 0;
+                        let new_seq = TemplateApp::ordered_by_closeness(
+                            &self.sequence,
+                            self.arm_position_int,
+                        );
+                        for (i, el) in new_seq.iter().enumerate() {
+                            if total_seq == 0 {
+                                println!(
+                                    "{}",
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs()
+                                );
+                                total_seq =
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs();
+                            } else {
+                                total_seq = total_seq + (new_seq[i - 1] as i32 - *el as i32).abs();
+                            }
+                        }
+                        ui.label(total_seq.to_string());
+                    }
+                    Panel::SCAN => {
+                        let mut total_seq: i32 = 0;
+                        let new_seq = TemplateApp::scan(
+                            &self.sequence,
+                            self.arm_position_int,
+                            self.direction,
+                            self.cylinder_count,
+                        );
+                        for (i, el) in new_seq.iter().enumerate() {
+                            if total_seq == 0 {
+                                println!(
+                                    "{}",
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs()
+                                );
+                                total_seq =
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs();
+                            } else {
+                                total_seq = total_seq + (new_seq[i - 1] as i32 - *el as i32).abs();
+                            }
+                        }
+                        ui.label(total_seq.to_string());
+                    }
+                    Panel::CSCAN => {
+                        let mut total_seq: i32 = 0;
+                        let new_seq = TemplateApp::cscan(
+                            &self.sequence,
+                            self.arm_position_int,
+                            self.direction,
+                            self.cylinder_count,
+                        );
+                        for (i, el) in new_seq.iter().enumerate() {
+                            if total_seq == 0 {
+                                total_seq =
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs();
+                            } else {
+                                total_seq = total_seq + (new_seq[i - 1] as i32 - *el as i32).abs();
+                            }
+                        }
+                        ui.label(total_seq.to_string());
+                    }
+                    Panel::CLOOK => {
+                        let mut total_seq: i32 = 0;
+                        let new_seq = TemplateApp::clook(
+                            &self.sequence,
+                            self.arm_position_int,
+                            self.direction,
+                        );
+                        for (i, el) in new_seq.iter().enumerate() {
+                            if total_seq == 0 {
+                                total_seq =
+                                    total_seq + (self.arm_position_int as i32 - *el as i32).abs();
+                            } else {
+                                total_seq = total_seq + (new_seq[i - 1] as i32 - *el as i32).abs();
+                            }
+                        }
+                        ui.label(total_seq.to_string());
+                    }
+                }
             });
         });
     }
