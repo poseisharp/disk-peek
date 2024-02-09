@@ -1,3 +1,5 @@
 # ⠙⠊⠎⠅⠤⠏⠑⠑⠅ / disk-peek
 
-⠠⠁⠀⠙⠊⠎⠅⠀⠎⠡⠫⠥⠇⠬⠀⠁⠇⠛⠕⠗⠊⠹⠍⠎⠀⠧⠊⠎⠥⠁⠇⠊⠵⠻⠀⠍⠁⠙⠑⠀⠾⠀⠠⠗⠥⠌⠀⠠⠑⠛⠥⠊⠲ / A disk scheduling algorithms visualizer made with Rust Egui.
+⠠⠁⠀⠙⠊⠎⠅⠀⠎⠡⠫⠥⠇⠬⠀⠁⠇⠛⠕⠗⠊⠹⠍⠎⠀⠧⠊⠎⠥⠁⠇⠊⠵⠻⠀⠍⠁⠙⠑⠀⠾⠀⠠⠗⠥⠌⠀⠠⠑⠛⠥⠊⠲ 
+
+A disk scheduling algorithms visualizer made with Rust Egui.
